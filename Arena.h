@@ -3,8 +3,9 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#define ARENA_INIT_SIZE 4000000
-
+//#define ARENA_INIT_SIZE 4096
+#define ARENA_INIT_SIZE 4096*3
+#define ARENA_PADDING_SIZE 16
 typedef struct {
 
 	void* arena_space_ptr;
@@ -16,7 +17,9 @@ typedef struct {
 } Arena;
 
 
-void arena_init(Arena* arena, int size);
+Arena * arena_init( int size);
 void* arena_alloc(Arena* arena, size_t size);
-void arena_free(Arena* arena);
+void arena_free(Arena** arena);
+void arena_init_st(Arena* arena, int size);
+void arena_report(Arena arena);
 
