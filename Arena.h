@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 //#define ARENA_INIT_SIZE 4096
 #define ARENA_INIT_SIZE 4096*3
 #define ARENA_PADDING_SIZE 16

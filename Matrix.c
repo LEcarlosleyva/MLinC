@@ -523,8 +523,8 @@ void matrix_column_set(Matrix* a, int j, float val) {
 		return;
 	}
 
-	if (j >= a->rows) {
-		printf("index i out of range in matrix_set\n");
+	if (j >= a->columns) {
+		printf("index j out of range in matrix_set\n");
 		exit(1);
 		return;
 	}
