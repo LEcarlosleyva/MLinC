@@ -38,7 +38,7 @@ Arena * arena_init(int size) {
 
 	if (!arena) {
 		printf("failed to allocate space for arena in arena_init\n");
-		free(arena);
+		
 		return NULL;
 	}
 		
@@ -56,6 +56,7 @@ Arena * arena_init(int size) {
 	arena->arena_space_ptr = malloc(arena_size);
 	if (!arena->arena_space_ptr) {
 		printf("failed to allocate space for arena in arena_init\n");
+		free(arena);
 		return NULL;
 	}
 	arena->arena_space_current = arena->arena_space_ptr;
