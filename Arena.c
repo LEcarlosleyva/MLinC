@@ -105,7 +105,7 @@ void* arena_alloc(Arena* arena, size_t size) {
 void arena_report(Arena arena) {
 
 
-	printf("arena #: %d space occupied is : %d and the space left is : %d \n",arena.id,arena.arena_space_occupied,arena.arena_space_left );
+	printf("arena #: %zu space occupied is : %zu and the space left is : %zu \n",arena.id,arena.arena_space_occupied,arena.arena_space_left );
 
 }
 
