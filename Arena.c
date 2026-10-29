@@ -116,5 +116,6 @@ void arena_free(Arena** arena) {
 
 	free((*arena)->arena_space_ptr);
 	free(*arena);
+	*arena = NULL;
 
 }
