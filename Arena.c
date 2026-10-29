@@ -8,6 +8,7 @@
 static int id_counter = 0;
 
 
+
 void arena_init_st(Arena* arena, int size) {
 
 	if (!arena) return;
@@ -37,6 +38,7 @@ Arena * arena_init(int size) {
 
 	if (!arena) {
 		printf("failed to allocate space for arena in arena_init\n");
+		free(arena);
 		return NULL;
 	}
 		
@@ -113,5 +115,5 @@ void arena_free(Arena** arena) {
 
 	free((*arena)->arena_space_ptr);
 	free(*arena);
-	
+
 }

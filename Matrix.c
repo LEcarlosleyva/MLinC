@@ -378,14 +378,14 @@ void matrix_copy_into(Matrix a, Matrix * b) {
 	if (!b) {
 		printf("the pointer to the sotarage matrix is empty in matrix_scale\n");
 		exit(1);
-		return;
+		
 
 	}
 
 	if (!b->matrix) {
 		printf("the matrix b is empty in matrix_scale\n");
 		exit(1);
-		return;
+		
 	}
 	if (b->n < a.n) {
 		printf("not enough space in b to store the product in matrix_scale\n");
