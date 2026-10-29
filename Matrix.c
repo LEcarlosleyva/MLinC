@@ -12,7 +12,7 @@ Matrix matrix_init(Arena * arena , int rows, int columns, float init_val) {
 	if (!r) {
 		printf("failed to arena_alloc space for matrix in matrix_init\n");
 		exit(1);
-		return;
+		
 	};
 	
 	Matrix matr;
@@ -41,7 +41,7 @@ Matrix matrix_init_rand(Arena * arena, int rows, int columns) {
 	if (!r) {
 		printf("failed to arena_alloc space for matrix in matrix_init_rand\n");
 		exit(1);
-		return;
+		
 	}
 	Matrix matr;
 	matr.matrix = r;
@@ -67,7 +67,7 @@ Matrix matrix_init_ident(Arena * arena, int n, float scalar) {
 	if (!r) {
 		printf("failed to arena_alloc space for matrix in matrix_init_ident\n");
 		exit(1);
-		return;
+		
 	}
 	Matrix matr;
 	matr.matrix = r;
@@ -120,7 +120,7 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 		printf("the number of columns (inputs ) in a does not match the number of rows (outputs) in b in matrix_mult \n");
 		exit(1);
 		
-		return;
+		
 
 	}
 
@@ -131,7 +131,7 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 	if(!b.matrix){
 		printf("the matrix b is empty in matrix_mult\n");
 		exit(1);
-		return;
+		
 	}
 
 
@@ -146,13 +146,13 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 	if(!c->matrix) {
 		printf("the matrix store is empty in matrix_mult\n");
 		exit(1);
-		return;
+		
 	}
 
 	if (c->n < a.rows * b.columns) {
 		printf("not enough space in c to store the product in matrix_mult\n");
 		exit(1);
-		return;
+		
 	}
 	c->rows = a.rows;
 	c->columns = b.columns;
@@ -185,14 +185,14 @@ Matrix matrix_hadamard_mult(Arena* arena,Matrix a, Matrix b, Matrix *store){
 	if (a.columns != b.columns) {
 		printf("the number of columns in a does not match the number of colums in b in matrix_hadamard_mult \n");
 		exit(1);
-		return;
+		
 	}
 
 
 	if (a.rows != b.rows) {
 		printf("the number of rows in a does not match the number of rows in b in matrix_hadamard_mult \n");
 		exit(1);
-		return;
+		
 	}
 	if (!a.matrix) {
 		printf("the matrix a is empty inmatrix_hadamard_mult\n");
@@ -201,7 +201,7 @@ Matrix matrix_hadamard_mult(Arena* arena,Matrix a, Matrix b, Matrix *store){
 	if (!b.matrix) {
 		printf("the matrix b is empty in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 	if (!c) {
 		c = arena_alloc(arena, sizeof(Matrix));
@@ -210,12 +210,12 @@ Matrix matrix_hadamard_mult(Arena* arena,Matrix a, Matrix b, Matrix *store){
 	if (!c->matrix) {
 		printf("the matrix c is empty in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 	if (c->n < a.rows * a.columns) {
 		printf("not enough space in c to store the product in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 
 	c->rows = a.rows;
@@ -243,14 +243,14 @@ Matrix matrix_add(Arena * arena, Matrix a, Matrix b, Matrix * store) {
 	if (a.columns != b.columns) {
 		printf("the number of columns in a does not match the number of colums in b in matrix_hadamard_mult \n");
 		exit(1);
-		return;
+		
 	}
 
 
 	if (a.rows != b.rows) {
 		printf("the number of rows in a does not match the number of rows in b in matrix_hadamard_mult \n");
 		exit(1);
-		return;
+		
 	}
 	if (!a.matrix) {
 		printf("the matrix a is empty inmatrix_hadamard_mult\n");
@@ -259,7 +259,7 @@ Matrix matrix_add(Arena * arena, Matrix a, Matrix b, Matrix * store) {
 	if (!b.matrix) {
 		printf("the matrix b is empty in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 	if (!c) {
 		c = arena_alloc(arena, sizeof(Matrix));
@@ -268,12 +268,12 @@ Matrix matrix_add(Arena * arena, Matrix a, Matrix b, Matrix * store) {
 	if (!c->matrix) {
 		printf("the matrix c is empty in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 	if (c->n < a.rows * a.columns) {
 		printf("not enough space in c to store the product in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 
 	}
@@ -300,7 +300,7 @@ Matrix matrix_scale(Arena * arena,Matrix a, Matrix  * store, float scalar) {
 	if (!a.matrix) {
 		printf("matrix a is empty in matrix_scale \n");
 		exit(1);
-		return;
+		
 	}
 		
 	if (!b) {
@@ -312,7 +312,7 @@ Matrix matrix_scale(Arena * arena,Matrix a, Matrix  * store, float scalar) {
 	if (!b->matrix) {
 		printf("the matrix b is empty in matrix_scale\n");
 		exit(1);
-		return;
+		
 	}
 	if (b->n < a.n) {
 		printf("not enough space in b to store the product in matrix_scale\n");
@@ -356,7 +356,7 @@ Matrix matrix_get_transpose(Matrix a) {
 	if (!a.matrix) {
 		printf("the matrix c is empty in matrix_hadamard_mult\n");
 		exit(1);
-		return;
+		
 	}
 
 	Matrix retval = a;
@@ -413,7 +413,7 @@ Matrix matrix_func_apply(Arena * arena, Matrix a,Matrix * store, float (*f)(floa
 	if (!a.matrix) {
 		printf("matrix a is empty in matrix_func_apply \n");
 		exit(1);
-		return;
+		
 	}
 
 	if (!b) {
@@ -425,7 +425,7 @@ Matrix matrix_func_apply(Arena * arena, Matrix a,Matrix * store, float (*f)(floa
 	if (!b->matrix) {
 		printf("the matrix b is empty in matrix_func_apply\n");
 		exit(1);
-		return;
+		
 	}
 	if (b->n < a.n) {
 		printf("not enough space in b to store the product in matrix_func_apply\n");
@@ -440,7 +440,7 @@ Matrix matrix_func_apply(Arena * arena, Matrix a,Matrix * store, float (*f)(floa
 	if (!f) {
 		printf("f is not valid in matrix_func_apply\n");
 		exit(1);
-		return;
+		
 	}
 	for (int i = 0; i < a.rows ; i++) {
 		for(int j = 0; j < a.columns;j++){
@@ -550,13 +550,13 @@ float matrix_vector_mag(Matrix a) {
 	if (!a.matrix) {
 		printf("the matrix a is empty in matrix_vector_mag\n");
 		exit(1);
-		return;
+		
 	}
 
 	if (a.columns != 1) {
 		printf("the matrix a is not a vector in matrix_vector_mag\n");
 		exit(1);
-		return;
+		
 	}
 
 
