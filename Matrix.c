@@ -434,7 +434,7 @@ Matrix matrix_func_apply(Arena * arena, Matrix a,Matrix * store, float (*f)(floa
 
 	b->rows = a.rows;
 	b->columns = a.columns;
-	b->transpose = false;
+	b->transpose = a.transpose;
 	
 	}
 	if (!f) {
@@ -442,9 +442,11 @@ Matrix matrix_func_apply(Arena * arena, Matrix a,Matrix * store, float (*f)(floa
 		exit(1);
 		return;
 	}
-	for (int i = 0; i < a.rows * a.columns; i++) {
+	for (int i = 0; i < a.rows ; i++) {
+		for(int j = 0; j < a.columns;j++){
 
-		b->matrix[i] = f(a.matrix[i]);
+		b->matrix[GET(b,i,j)] = f(a.matrix[GET(&a, i, j)]);
+		}
 	}
 
 	return *b;
