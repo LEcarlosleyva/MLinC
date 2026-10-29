@@ -8,7 +8,7 @@
 #define MATRIX_BUFFER_DEFAULT_ROW_SIZE 10
 #define MATRIX_BUFFER_DEFAULT_COLUMN_SIZE 10
 
-#define GET(M,X,Y) ((M)->transpose) ? ((X) + (Y)*(M)->rows) : ((X)*(M)->columns + (Y)) 
+#define GET(M,X,Y) (((M)->transpose) ? ((X) + (Y)*(M)->rows) : ((X)*(M)->columns + (Y))) 
 
 typedef struct {
 	float* matrix;
