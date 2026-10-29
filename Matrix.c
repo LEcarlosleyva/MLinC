@@ -141,7 +141,7 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 
 		c = arena_alloc(arena, sizeof(Matrix));
 		*c = matrix_init(arena, a.rows, b.columns, 0);
-	} else { // otherwise just use storage to store the resulting matrix as long as it can in fact soore it 
+	} else { // otherwise just use storage to store the resulting matrix as long as it can in fact store it 
 
 	if(!c->matrix) {
 		printf("the matrix store is empty in matrix_mult\n");
@@ -154,6 +154,30 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 		exit(1);
 		
 	}
+
+	if (c->matrix == a.matrix) {
+		//storing on argument; need copy//
+		Matrix *tmpa = arena_alloc(arena, sizeof(Matrix));
+		if (!tmpa) {
+			printf("failed to make copy of argument\n");
+			exit(1);
+		}
+		matrix_copy_into(a, tmpa);
+		a = *tmpa;
+
+	}
+	if (c->matrix == b.matrix) {
+		//storing on argument; need copy//
+		Matrix* tmpb = arena_alloc(arena, sizeof(Matrix));
+		if (!tmpb) {
+			printf("failed to make copy of argument\n");
+			exit(1);
+		}
+		matrix_copy_into(b, tmpb);
+		b = *tmpb;
+
+	}
+
 	c->rows = a.rows;
 	c->columns = b.columns;
 	c->transpose = false;
