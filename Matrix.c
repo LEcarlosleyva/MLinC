@@ -157,24 +157,25 @@ Matrix matrix_mult(Arena * arena,Matrix a, Matrix b,Matrix * store){
 
 	if (c->matrix == a.matrix) {
 		//storing on argument; need copy//
-		Matrix *tmpa = arena_alloc(arena, sizeof(Matrix));
-		if (!tmpa) {
+		Matrix tmpa = matrix_init(arena, a.rows, a.columns, 0);
+		if (!tmpa.matrix) {
 			printf("failed to make copy of argument\n");
 			exit(1);
 		}
-		matrix_copy_into(a, tmpa);
-		a = *tmpa;
+		matrix_copy_into(a, &tmpa);
+		a = tmpa;
 
 	}
 	if (c->matrix == b.matrix) {
 		//storing on argument; need copy//
-		Matrix* tmpb = arena_alloc(arena, sizeof(Matrix));
-		if (!tmpb) {
+		
+		Matrix tmpb = matrix_init(arena, b.rows, b.columns, 0);
+		if (!tmpb.matrix) {
 			printf("failed to make copy of argument\n");
 			exit(1);
 		}
-		matrix_copy_into(b, tmpb);
-		b = *tmpb;
+		matrix_copy_into(b, &tmpb);
+		b = tmpb;
 
 	}
 
