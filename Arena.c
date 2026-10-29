@@ -77,7 +77,7 @@ void* arena_alloc(Arena* arena, size_t size) {
 	
 
 	
-	size_t padding = ARENA_PADDING_SIZE - size % ARENA_PADDING_SIZE;
+	size_t padding = (ARENA_PADDING_SIZE - size % ARENA_PADDING_SIZE)%ARENA_PADDING_SIZE;
 
 
 
@@ -88,7 +88,12 @@ void* arena_alloc(Arena* arena, size_t size) {
 
 	void* ptr = arena->arena_space_current;
 
-	(uint8_t *) arena->arena_space_current += size + padding;
+	
+
+	uint8_t * tmp = (uint8_t *) arena->arena_space_current + size + padding;
+
+	arena->arena_space_current = (void*)tmp;
+
 	arena->arena_space_occupied += size + padding;
 	arena->arena_space_left -= size + padding;
 
