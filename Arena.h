@@ -23,4 +23,4 @@ void* arena_alloc(Arena* arena, size_t size);
 void arena_free(Arena** arena);
 void arena_init_st(Arena* arena, int size);
 void arena_report(Arena arena);
-
+void arena_reset(Arena* arena);

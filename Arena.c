@@ -112,6 +112,14 @@ void arena_report(Arena arena) {
 
 }
 
+
+void arena_reset(Arena* arena) {
+	arena->arena_space_current = arena->arena_space_ptr;
+	arena->arena_space_left += arena->arena_space_occupied;
+	arena->arena_space_occupied = 0;
+
+}
+
 void arena_free(Arena** arena) {
 
 	free((*arena)->arena_space_ptr);
