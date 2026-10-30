@@ -36,16 +36,18 @@ typedef struct {
 
 
 typedef struct {
-	int K;
-	int V;
-} Pair;
+	int inputs;
+	int outputs;
+} LayerSize;
 
-float relu(float x) {
-	return x > 0 ? x : 0.3*x;
+#define LEAKY_RELU_SLOPE 0.3	// double on purpose: the old code computed 0.3*x in double, and 0.3f changes the training result
+
+float leaky_relu(float x) {
+	return x > 0 ? x : LEAKY_RELU_SLOPE * x;
 }
 
-float relu_prime(float x) {
-	return x > 0 ? 1 : 0.3;
+float leaky_relu_prime(float x) {
+	return x > 0 ? 1 : LEAKY_RELU_SLOPE;
 
 }
 
@@ -57,12 +59,12 @@ float linear_prime(float x) {
 	return 1;
 }
 
-float cost(Matrix y, Matrix y_prime) {
+float cost(Matrix target, Matrix output) {
 	Arena* scratch_space = arena_init(0);
-	
-	Matrix neg_y_prime = matrix_scale(scratch_space, y_prime, NULL, -1);
-	
-	Matrix error = matrix_add(scratch_space, y, neg_y_prime, NULL);
+
+	Matrix neg_output = matrix_scale(scratch_space, output, NULL, -1);
+
+	Matrix error = matrix_add(scratch_space, target, neg_output, NULL);
 	
 	float result = matrix_vector_mag(error);
 	
@@ -72,7 +74,61 @@ float cost(Matrix y, Matrix y_prime) {
 
 }
 
-void layer_init(Arena * arena,Layer * l,int output_size,int input_size, float (*activation)(float),float (*activation_prime)(float)) {
+// per-feature normalization: each row (feature) of the samples gets mean 0 and std 1 over all samples
+typedef struct {
+	Matrix mean;
+	Matrix std;
+} Normalizer;
+
+Normalizer normalizer_fit(Arena* arena, Matrix* samples, int sample_number) {
+	int features = samples[0].rows;
+	Normalizer norm;
+	norm.mean = matrix_init(arena, features, 1, 0);
+	norm.std = matrix_init(arena, features, 1, 0);
+
+	for (int r = 0; r < features; r++) {
+		float mean = 0;
+		for (int i = 0; i < sample_number; i++) {
+			mean += samples[i].matrix[GET(&samples[i], r, 0)];
+		}
+		mean /= sample_number;
+
+		float variance = 0;
+		for (int i = 0; i < sample_number; i++) {
+			float d = samples[i].matrix[GET(&samples[i], r, 0)] - mean;
+			variance += d * d;
+		}
+		variance /= sample_number;
+
+		matrix_set(&norm.mean, r, 0, mean);
+		matrix_set(&norm.std, r, 0, variance > 0 ? sqrtf(variance) : 1);	// a constant feature has no information, and this avoids dividing by 0
+	}
+	return norm;
+}
+
+// store = (x - mean) / std
+void normalize(Normalizer norm, Matrix x, Matrix* store) {
+	if (x.rows != norm.mean.rows || store->rows != x.rows) {
+		printf("size mismatch in normalize\n");
+		exit(1);
+	}
+	for (int r = 0; r < x.rows; r++) {
+		matrix_set(store, r, 0, (x.matrix[GET(&x, r, 0)] - norm.mean.matrix[r]) / norm.std.matrix[r]);
+	}
+}
+
+// store = x * std + mean, the inverse of normalize
+void denormalize(Normalizer norm, Matrix x, Matrix* store) {
+	if (x.rows != norm.mean.rows || store->rows != x.rows) {
+		printf("size mismatch in denormalize\n");
+		exit(1);
+	}
+	for (int r = 0; r < x.rows; r++) {
+		matrix_set(store, r, 0, x.matrix[GET(&x, r, 0)] * norm.std.matrix[r] + norm.mean.matrix[r]);
+	}
+}
+
+void layer_init(Arena * arena,Layer * l,int input_size,int output_size, float (*activation)(float),float (*activation_prime)(float)) {
 	l->input_size = input_size;
 	l->output_size = output_size;
 	
@@ -96,21 +152,21 @@ void layer_init(Arena * arena,Layer * l,int output_size,int input_size, float (*
 
 
 
-Layers layers_init(Arena* arena, Pair* internal_structure, int layer_number) {
+Layers layers_init(Arena* arena, LayerSize* layer_sizes, int layer_number) {
 	Layers layers;
 
 	layers.layers = arena_alloc(arena, sizeof(Layer) * layer_number);
 	layers.layer_number = layer_number;
 
 	for (int i = 0; i < layer_number - 1; i++) {
-		layer_init(arena, layers.layers + i, internal_structure[i].V, internal_structure[i].K, relu, relu_prime);
+		layer_init(arena, layers.layers + i, layer_sizes[i].inputs, layer_sizes[i].outputs, leaky_relu, leaky_relu_prime);
 		printf("layer number %d has %d inputs and %d outputs the buffer has %d outputs the layer weigts are \n", i + 1, layers.layers[i].weights.columns, layers.layers[i].weights.rows, layers.layers[i].output_buffer.rows);
 		matrix_print(layers.layers[i].weights);
 		printf("\n");
 
 	}
 	int i = layer_number - 1;
-	layer_init(arena, layers.layers + i, internal_structure[i].V, internal_structure[i].K, linear, linear_prime);
+	layer_init(arena, layers.layers + i, layer_sizes[i].inputs, layer_sizes[i].outputs, linear, linear_prime);
 	printf("layer number %d has %d inputs and %d outputs the buffer has %d outputs the layer weigts are \n", i + 1, layers.layers[i].weights.columns, layers.layers[i].weights.rows, layers.layers[i].output_buffer.rows);
 	matrix_print(layers.layers[i].weights);
 	printf("\n");
@@ -156,19 +212,19 @@ void layers_print(Layers layers) {
 
 }
 
-void layer_backprop(Layers layers, Matrix input, Matrix y_prime, float learning_rate) {
+void layer_backprop(Layers layers, Matrix input, Matrix target, float learning_rate) {
 
 	//printf("layers_backprop-----------------------------------------------------------------------\n");
 	Arena* scratch_space = arena_init(0);
-	
 
-	Matrix neg_y = matrix_scale(scratch_space, y_prime, NULL, -1);
-	
-	Matrix y = layers_forward(layers, input);
-	
 
-	
-	Matrix error = matrix_add(scratch_space, y, neg_y, NULL);
+	Matrix neg_target = matrix_scale(scratch_space, target, NULL, -1);
+
+	Matrix output = layers_forward(layers, input);
+
+
+
+	Matrix error = matrix_add(scratch_space, output, neg_target, NULL);
 	
 	Matrix grad;
 	
@@ -242,13 +298,13 @@ int main() {
 	//   xxxx CORRECTION NOTE : biases are not necessary when the newtork is massive , since other weights can simulate biases and the inputs are normalized 
 	// for small networks biases are essential otherwise we wont be able to learn functions that pass throug zero
 	// TODO investigate how to use cuda to do matrix multiplication
-	Pair internal_structure[] = { {2,10},{10,10} ,{10,3} };
-	int layer_number = sizeof(internal_structure) / sizeof(internal_structure[0]);
+	LayerSize layer_sizes[] = { {2,10},{10,10} ,{10,3} };	// {inputs, outputs} per layer
+	int layer_number = sizeof(layer_sizes) / sizeof(layer_sizes[0]);
 	float cost_av = 0;
 
 
 
-	Layers layers = layers_init(arena, internal_structure, layer_number);
+	Layers layers = layers_init(arena, layer_sizes, layer_number);
 	
 
 
@@ -260,7 +316,7 @@ int main() {
 	int input_number = sizeof(inputs) / sizeof(inputs[0]);
 
 	for (int i = 0; i < input_number; i++) {
-		inputs[i] = matrix_init(arena_for_input, internal_structure[0].K, 1, i + 10 );
+		inputs[i] = matrix_init(arena_for_input, layer_sizes[0].inputs, 1, i + 10 );
 		matrix_row_set(inputs + i, 1, i + 11);
 		printf("\n");
 		matrix_print(inputs[i]);
@@ -271,28 +327,53 @@ int main() {
 	
 	printf("output initializatio-----------------------------------------------------------------------------\n");
 
-	Matrix * y = arena_alloc(arena_for_input,sizeof(Matrix)*input_number) ;
+	Matrix * targets = arena_alloc(arena_for_input,sizeof(Matrix)*input_number) ;
 
 	for (int i = 0; i < input_number; i++) {
-		y[i] = matrix_init(arena_for_input, internal_structure[layer_number - 1].V, 1, (i + 1) *i );
-		matrix_row_set(y + i, 1, i * 3);
+		targets[i] = matrix_init(arena_for_input, layer_sizes[layer_number - 1].outputs, 1, (i + 1) *i );
+		matrix_row_set(targets + i, 1, i * 3);
 		printf("\n");
-		matrix_print(y[i]);
+		matrix_print(targets[i]);
 
 
 	}
+
+	printf("normalization-----------------------------------------------------------------------------\n");
+	// the network trains on normalized data; outputs and cost are printed in original units
+
+	Normalizer input_norm = normalizer_fit(arena_for_input, inputs, input_number);
+	Normalizer target_norm = normalizer_fit(arena_for_input, targets, input_number);
+	printf("input mean and std per feature\n");
+	matrix_print(input_norm.mean);
+	matrix_print(input_norm.std);
+	printf("target mean and std per feature\n");
+	matrix_print(target_norm.mean);
+	matrix_print(target_norm.std);
+
+	Matrix* inputs_norm = arena_alloc(arena_for_input, sizeof(Matrix) * input_number);
+	Matrix* targets_norm = arena_alloc(arena_for_input, sizeof(Matrix) * input_number);
+
+	for (int i = 0; i < input_number; i++) {
+		inputs_norm[i] = matrix_init(arena_for_input, inputs[i].rows, 1, 0);
+		normalize(input_norm, inputs[i], &inputs_norm[i]);
+		targets_norm[i] = matrix_init(arena_for_input, targets[i].rows, 1, 0);
+		normalize(target_norm, targets[i], &targets_norm[i]);
+	}
+
+	Matrix prediction = matrix_init(arena_for_input, layer_sizes[layer_number - 1].outputs, 1, 0);	// network output in original units
 
 	Matrix tmp;
 	printf("layers forward test-----------------------------------------------------------------------------\n");
 
 
 	for (int i = 0; i < input_number; i++) {
-		tmp = layers_forward(layers, inputs[i]);
+		tmp = layers_forward(layers, inputs_norm[i]);
+		denormalize(target_norm, tmp, &prediction);
 		printf("the input is \n");
 		matrix_print(inputs[i]);
 		printf("the output is \n");
-		matrix_print(tmp);
-		cost_av += cost(y[i], tmp);
+		matrix_print(prediction);
+		cost_av += cost(targets[i], prediction);
 	}
 	cost_av /= input_number;
 	printf("the average cost is %f \n", cost_av);
@@ -302,12 +383,12 @@ int main() {
 	layers_print(layers);
 	printf("training-----------------------------\n----------\n-------------------------------------\n");
 
-	int training_iteration = 99900;
-	float learning_rate = 0.000003;
-	for (int i = 0; i < training_iteration; i++) {
-		
+	int training_iteration = 2000;	// was 99900 at learning rate 0.000003 on raw data
+	float learning_rate = 0.01f;
+	for (int epoch = 0; epoch < training_iteration; epoch++) {
+
 		for (int i = 0; i < input_number; i++) {
-			layer_backprop(layers, inputs[i], y[i], learning_rate);
+			layer_backprop(layers, inputs_norm[i], targets_norm[i], learning_rate);
 		}
 
 
@@ -323,17 +404,18 @@ int main() {
 	cost_av = 0;
 	
 	for (int i = 0; i < input_number; i++) {
-		tmp = layers_forward(layers, inputs[i]);
+		tmp = layers_forward(layers, inputs_norm[i]);
+		denormalize(target_norm, tmp, &prediction);
 		printf("the input is \n");
 		matrix_print(inputs[i]);
 		printf("the output is \n");
-		matrix_print(tmp);
-		cost_av += cost(y[i], tmp);
+		matrix_print(prediction);
+		cost_av += cost(targets[i], prediction);
 	}
 	cost_av /= input_number;
 	printf("the average cost is %f \n", cost_av);
 
- // Memeroy managment 
+ // Memeroy managment
 	arena_report(*arena);
 	arena_free(&arena);
 	arena_report(*arena_for_input);
