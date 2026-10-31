@@ -76,7 +76,7 @@ void* arena_alloc(Arena* arena, size_t size) {
 	if (!arena) {
 		printf("pointer to arrena is null in arena_alloc\n");
 		return NULL;
-	}
+	}	
 	
 
 	
@@ -120,7 +120,7 @@ void arena_reset(Arena* arena) {
 
 }
 
-void arena_free(Arena** arena) {
+	void arena_free(Arena** arena) {
 
 	free((*arena)->arena_space_ptr);
 	free(*arena);
