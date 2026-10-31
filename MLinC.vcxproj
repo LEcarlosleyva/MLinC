@@ -20,11 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Arena.c" />
+    <ClCompile Include="Layers.c" />
     <ClCompile Include="Main.c" />
     <ClCompile Include="Matrix.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Arena.h" />
+    <ClInclude Include="Layers.h" />
     <ClInclude Include="Matrix.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

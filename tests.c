@@ -1,7 +1,7 @@
 // tests.c : testbench for Arena, Matrix and the network code in MAIN.c
 //
 // build (gcc):
-//   gcc -std=c11 -Wall -Wextra -D__USE_MINGW_ANSI_STDIO=1 tests.c Arena.c Matrix.c -o tests.exe -lm
+//   gcc -std=c11 -Wall -Wextra -D__USE_MINGW_ANSI_STDIO=1 tests.c Arena.c Matrix.c Layers.c -o tests.exe -lm
 // do not add MAIN.c to that command: tests.c includes it (see below)
 // do not add tests.c to the Visual Studio project: it has its own main
 //
@@ -9,8 +9,8 @@
 
 #include <string.h>
 
-// MAIN.c holds the network code and its own main(), so rename that main to reuse the real code here
-// TODO: move the network code into Layers.c / Layers.h, then include "Layers.h" instead
+// MAIN.c holds cost, Normalizer and its own main(), so rename that main to reuse the real code here
+// the layer code is in Layers.c / Layers.h (MAIN.c includes Layers.h); MAIN.c still holds cost and Normalizer
 #define main mlinc_main
 #include "MAIN.c"
 #undef main
